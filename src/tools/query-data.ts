@@ -6,7 +6,7 @@ interface QueryEnv {
     METEO_DATA_DO?: unknown;
 }
 
-export function registerQueryData(server: McpServer, env?: QueryEnv) {
+export function registerQueryData(server: McpServer, env?: QueryEnv): void {
     const handler = createQueryDataHandler("METEO_DATA_DO", "meteo");
 
     server.registerTool(

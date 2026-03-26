@@ -13,7 +13,7 @@ interface MeteoEnv {
 }
 
 export class MyMCP extends McpAgent {
-    server: any = new McpServer({
+    server = new McpServer({
         name: "open-meteo",
         version: "0.1.0",
     });
