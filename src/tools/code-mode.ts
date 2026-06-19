@@ -20,6 +20,8 @@ export function registerCodeMode(server: McpServer, env: CodeModeEnv): void {
 
     const executeTool = createExecuteTool({
         prefix: "meteo",
+        // Verifiable provenance: meteo_execute results carry a _meta.citation.
+        source: { id: "meteo", name: "Open-Meteo", url: "https://open-meteo.com", license: "CC BY 4.0" },
         catalog: meteoCatalog,
         apiFetch,
         doNamespace: env.METEO_DATA_DO,
