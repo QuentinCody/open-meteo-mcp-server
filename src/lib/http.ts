@@ -51,3 +51,11 @@ export async function meteoFetch(
         userAgent: "open-meteo-mcp-server/1.0 (bio-mcp)",
     });
 }
+
+/** Build public API requests without losing endpoint-specific host routing. */
+export function meteoUrl(path: string, params: Record<string, unknown>): URL {
+    if (!/^\/v1\/[a-z-]+$/.test(path)) throw new Error("Use a literal Open-Meteo endpoint and separate query parameters");
+    const url = new URL(path, getBaseUrl(path));
+    for (const [key, value] of Object.entries(params)) if (value !== undefined) url.searchParams.set(key, String(value));
+    return url;
+}

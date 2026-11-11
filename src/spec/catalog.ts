@@ -1,14 +1,15 @@
 import type { ApiCatalog } from "@bio-mcp/shared/codemode/catalog";
+import {archiveEndpoints, archiveWorkflows} from "./forecast-archive";
 
 export const meteoCatalog: ApiCatalog = {
     name: "Open-Meteo",
     baseUrl: "https://api.open-meteo.com",
     version: "1.0",
     auth: "none",
-    endpointCount: 10,
+    endpointCount: 11,
     notes:
         "- No API key required (free for non-commercial use)\n" +
-        "- All endpoints require latitude and longitude\n" +
+        "- Weather endpoints require latitude and longitude; geocoding uses a name\n" +
         "- Use /v1/search for geocoding (name → lat/lon) first if needed\n" +
         "- Hourly variables: temperature_2m, relative_humidity_2m, dew_point_2m,\n" +
         "  apparent_temperature, precipitation, rain, snowfall, snow_depth,\n" +
@@ -22,8 +23,12 @@ export const meteoCatalog: ApiCatalog = {
         "- Pass variable names as comma-separated strings: hourly=temperature_2m,precipitation\n" +
         "- timezone=auto auto-detects from coordinates\n" +
         "- Different subdomains for different endpoints (auto-routed by adapter)\n" +
-        "- Historical data available from 1940 to present via /v1/archive",
+        "- /v1/archive provides historical reanalysis/analysis products; coverage varies by model.\n" +
+        "- /v1/historical-forecast is stitched early forecast hours; /v1/single-run preserves one initialization. Neither is reanalysis.\n" +
+        "- Single-run initialization is not publication time. Preserve model/run, native units/timezone, missing values and hindcast distinctions.",
+    workflows: archiveWorkflows,
     endpoints: [
+        ...archiveEndpoints,
         {
             method: "GET",
             path: "/v1/forecast",
@@ -44,7 +49,7 @@ export const meteoCatalog: ApiCatalog = {
         {
             method: "GET",
             path: "/v1/archive",
-            summary: "Historical weather data from 1940 to present. Same variables as forecast",
+            summary: "Historical reanalysis/analysis data; ERA5 from 1940, other models have different coverage and variables",
             category: "historical",
             queryParams: [
                 { name: "latitude", type: "number", required: true, description: "Latitude" },
@@ -67,6 +72,7 @@ export const meteoCatalog: ApiCatalog = {
                 { name: "longitude", type: "number", required: true, description: "Longitude" },
                 { name: "hourly", type: "string", required: false, description: "Variables: wave_height, wave_direction, wave_period, ocean_current_velocity" },
                 { name: "daily", type: "string", required: false, description: "Daily marine variables" },
+                { name: "forecast_days", type: "number", required: false, description: "Requested forecast days; available horizon depends on the marine model" },
                 { name: "timezone", type: "string", required: false, description: "Timezone", default: "auto" },
             ],
         },
@@ -79,6 +85,7 @@ export const meteoCatalog: ApiCatalog = {
                 { name: "latitude", type: "number", required: true, description: "Latitude" },
                 { name: "longitude", type: "number", required: true, description: "Longitude" },
                 { name: "hourly", type: "string", required: false, description: "Variables: pm2_5, pm10, ozone, nitrogen_dioxide, sulphur_dioxide, carbon_monoxide, uv_index, european_aqi, us_aqi" },
+                { name: "forecast_days", type: "number", required: false, description: "Requested forecast days; available horizon depends on the air-quality model" },
                 { name: "timezone", type: "string", required: false, description: "Timezone", default: "auto" },
             ],
         },
@@ -140,6 +147,7 @@ export const meteoCatalog: ApiCatalog = {
                 { name: "longitude", type: "number", required: true, description: "Longitude" },
                 { name: "hourly", type: "string", required: false, description: "Hourly variables" },
                 { name: "models", type: "string", required: false, description: "Ensemble models: icon_seamless, icon_global, gfs_seamless, ecmwf_ifs04, gem_global, bom_access_global" },
+                { name: "forecast_days", type: "number", required: false, description: "Requested forecast days; available horizon depends on the ensemble model" },
                 { name: "timezone", type: "string", required: false, description: "Timezone", default: "auto" },
             ],
         },

@@ -1,25 +1,17 @@
 import type { ApiFetchFn } from "@bio-mcp/shared/codemode/catalog";
-import { meteoFetch } from "./http";
+import { meteoUrl } from "./http";
+import { readMeteoJson } from "./response";
+import {archivedForecast, fail} from "./forecast-archive";
 
 export function createMeteoApiFetch(): ApiFetchFn {
     return async (request) => {
         const params = { ...(request.params as Record<string, unknown> || {}) };
 
-        // Paths map directly to Open-Meteo endpoints
-        const response = await meteoFetch(request.path, params);
-
-        if (!response.ok) {
-            const errorBody = await response.text().catch(() => response.statusText);
-            const error = new Error(`HTTP ${response.status}: ${errorBody.slice(0, 200)}`) as Error & {
-                status: number;
-                data: unknown;
-            };
-            error.status = response.status;
-            error.data = errorBody;
-            throw error;
+        if (request.method !== "GET" || request.body !== undefined) fail("Open-Meteo supports GET requests");
+        if (request.path === "/v1/historical-forecast" || request.path === "/v1/single-run") {
+            return {status: 200, data: await archivedForecast(request.path === "/v1/single-run" ? "single_run" : "historical_forecast", params)};
         }
-
-        const data = await response.json();
-        return { status: response.status, data };
+        const result = await readMeteoJson(meteoUrl(request.path, params));
+        return {status: result.status, data: result.data};
     };
 }
